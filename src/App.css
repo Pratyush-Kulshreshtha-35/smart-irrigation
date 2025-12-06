@@ -68,7 +68,6 @@ body {
   gap: 12px;
 }
 
-
 /* Dark mode toggle */
 .dark-toggle {
   position: relative;
@@ -780,13 +779,6 @@ html.dark .dark-toggle-thumb {
 .auth-submit:disabled {
   opacity: 0.7;
   cursor: default;
-}
-
-.auth-footer-hint {
-  margin-top: 6px;
-  font-size: 11px;
-  color: #9ca3af;
-  text-align: center;
 }
 
 /* small loading */

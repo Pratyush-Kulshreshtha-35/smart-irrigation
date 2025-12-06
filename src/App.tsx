@@ -651,9 +651,6 @@ function AuthScreen() {
                 : "Sign Up"}
             </button>
 
-            <p className="auth-footer-hint">
-              This login is only for project demo users.
-            </p>
           </form>
         </div>
       </div>
