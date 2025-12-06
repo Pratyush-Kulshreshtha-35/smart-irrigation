@@ -1,73 +1,109 @@
-# React + TypeScript + Vite
+# 🌱 Smart Irrigation – Web Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern web dashboard to monitor and control an **IoT-based Smart Irrigation System** in real time using ESP32, sensors, and Firebase.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🔥 Features
 
-## React Compiler
+- Live sensor monitoring (Soil Moisture, Temperature, Humidity)
+- Automatic and manual water pump control
+- 5-day weather forecast with min/max temperature graph
+- Live soil moisture history graph
+- Firebase login (Sign-in & Sign-up authentication)
+- Dark/Light theme toggle
+- Smooth and responsive UI
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Layer | Technology |
+|-------|-------------|
+| Frontend | React + TypeScript + Vite |
+| Styling | Custom CSS |
+| Database | Firebase Realtime Database |
+| Authentication | Firebase Auth |
+| Hosting | Firebase Hosting |
+| IoT Hardware | ESP32 + DHT22 + Soil Moisture Sensor + Relay + Pump |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 📂 Project Setup
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 1️⃣ Clone the Repository
+```bash
+git clone <your-repository-link>
+cd smart-irrigation
+2️⃣ Install Dependencies
+bash
+Copy code
+npm install
+3️⃣ Create .env File (Required)
+Create a file named .env in the root of the project and add:
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+ini
+Copy code
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_DATABASE_URL=your_database_url
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+VITE_WEATHER_API_KEY=your_openweather_api_key
+4️⃣ Start Development Locally
+bash
+Copy code
+npm run dev
+5️⃣ Build for Production
+bash
+Copy code
+npm run build
+6️⃣ Deploy to Firebase Hosting
+bash
+Copy code
+firebase deploy
+🔌 ESP32 → Firebase Data Format
+ESP32 should upload data to:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+bash
+Copy code
+/irrigation/data/
+Example structure:
+
+json
+Copy code
+{
+  "soil": 63,
+  "temperature": 28.7,
+  "humidity": 54.3,
+  "pumpStatus": "ON"
+}
+The dashboard reads control commands from:
+
+bash
+Copy code
+/irrigation/control/
+Example:
+
+json
+Copy code
+{
+  "auto": true,
+  "manualPump": false
+}
+⭐ Contribution
+Contributions are welcome!
+To improve UI, backend logic or add new features:
+
+markdown
+Copy code
+1. Fork the repository
+2. Create a new branch
+3. Commit your changes
+4. Push and open a pull request
+👨‍💻 Author
+Pratyush Kulshreshtha
+IoT • Web Development • Firebase • React
