@@ -38,14 +38,12 @@ cd smart-irrigation
 ```
 ### 2️⃣ Install Dependencies
 ```bash
-Copy code
 npm install
 ```
 ### 3️⃣ Create .env File (Required)
 Create a file named .env in the root of the project and add:
 
-```
-Copy code
+```bash
 VITE_FIREBASE_API_KEY=your_api_key
 VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
 VITE_FIREBASE_DATABASE_URL=your_database_url
@@ -57,32 +55,25 @@ VITE_FIREBASE_APP_ID=your_app_id
 VITE_WEATHER_API_KEY=your_openweather_api_key
 ```
 ### 4️⃣ Start Development Locally
-bash
-```
-Copy code
+```bash
 npm run dev
 ```
 ### 5️⃣ Build for Production
-bash
-```
-Copy code
+```bash
 npm run build
 ```
 ### 6️⃣ Deploy to Firebase Hosting
-bash
-```
-Copy code
+```bash
 firebase deploy
 ```
 ### 🔌 ESP32 → Firebase Data Format
 ESP32 should upload data to:
 
-bash
-```
+```bash
 /irrigation/data/
 ```
 Example structure:
-```
+```bash
 json
 {
   "soil": 63,
@@ -93,12 +84,11 @@ json
 ```
 The dashboard reads control commands from:
 
-bash
-```
+```bash
 /irrigation/control/
 ```
 Example:
-```
+```bash
 json
 {
   "auto": true,
@@ -115,5 +105,5 @@ To improve UI, backend logic or add new features:
 4. Push and open a pull request
 ```
 ### 👨‍💻 Author
-Pratyush Kulshreshtha
+# Pratyush Kulshreshtha
 IoT • Web Development • Firebase • React
