@@ -241,6 +241,7 @@ function WeatherChart({ points }: WeatherChartProps) {
     ticks.push(t);
   }
 
+  // --- tooltip computation ---
   let tooltipX = 0;
   let tooltipY = 0;
   let tooltipText = "";
@@ -254,6 +255,20 @@ function WeatherChart({ points }: WeatherChartProps) {
     tooltipText = `${day.label}: Max ${day.max.toFixed(
       1
     )}°C, Min ${day.min.toFixed(1)}°C`;
+
+    // keep tooltip fully inside chart horizontally & vertically
+    const tooltipWidth = 140;
+    const tooltipHeight = 22;
+    const halfWidth = tooltipWidth / 2;
+
+    const minX = paddingLeft + halfWidth;
+    const maxX = width - paddingRight - halfWidth;
+    tooltipX = Math.max(minX, Math.min(maxX, tooltipX));
+
+    const minY = paddingTop + tooltipHeight + 4; // don’t go above top area
+    if (tooltipY < minY) {
+      tooltipY = minY;
+    }
   }
 
   return (
@@ -417,6 +432,7 @@ function WeatherChart({ points }: WeatherChartProps) {
     </div>
   );
 }
+
 
 /* ---------- Weather data fetching ---------- */
 
@@ -664,7 +680,6 @@ export default function App() {
   const [auto, setAuto] = useState(true);
   const [manualPump, setManualPump] = useState(false);
   const [statusText, setStatusText] = useState("");
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   const [weatherPoints, setWeatherPoints] = useState<WeatherPoint[]>([]);
   const [soilHistory, setSoilHistory] = useState<LineChartPoint[]>([]);
@@ -717,14 +732,6 @@ export default function App() {
           return next.slice(-15);
         });
       }
-
-      setLastUpdated(
-        new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })
-      );
     });
 
     const controlRef = ref(db, "irrigation/control");
@@ -808,7 +815,6 @@ export default function App() {
       <header className="top-bar">
         <span className="app-name">Smart Irrigation</span>
         <div className="top-right">
-          <span className="top-tab active">Web Dashboard</span>
           <button
             className={`dark-toggle ${darkMode ? "on" : ""}`}
             onClick={() => setDarkMode((prev) => !prev)}
@@ -830,18 +836,11 @@ export default function App() {
       <main className="dashboard-wrapper">
         <div className="dash-header">
           <div>
-            <h2 className="dash-title">Web Dashboard Template</h2>
+            <h2 className="dash-title">Web Dashboard</h2>
             <p className="dash-subtitle">
               Live view of sensor data from IoT based Smart Irrigation
               System.
             </p>
-          </div>
-          <div className="dash-header-right">
-            {lastUpdated && (
-              <span className="last-updated">
-                Last updated: {lastUpdated}
-              </span>
-            )}
           </div>
         </div>
 
