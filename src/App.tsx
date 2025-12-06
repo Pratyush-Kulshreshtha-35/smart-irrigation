@@ -51,6 +51,19 @@ function Gauge({
   const display =
     value === null ? "--" : value.toFixed(unit === "%" ? 0 : 1);
 
+  let hint = "";
+  if (value === null) {
+    hint = "Waiting for sensor data...";
+  } else if (label === "Soil Moisture") {
+    if (value < 30) hint = "Soil is dry – pump may turn ON in auto mode.";
+    else if (value > 80) hint = "Soil is very wet – consider stopping pump.";
+    else hint = "Soil moisture is in optimal range.";
+  } else if (label === "Soil Temperature") {
+    hint = "Monitor soil temperature for crop health.";
+  } else if (label === "Surrounding Humidity") {
+    hint = "Ambient humidity around your field.";
+  }
+
   return (
     <div className="card">
       <div className="card-title">{label}</div>
@@ -71,6 +84,7 @@ function Gauge({
         <span>{min}</span>
         <span>{max}</span>
       </div>
+      {hint && <div className="gauge-hint">{hint}</div>}
     </div>
   );
 }
@@ -156,7 +170,7 @@ function MiniLineChart({ points }: LineChartProps) {
   );
 }
 
-/* ---------- Weather Chart (min + max temperature vs day) ---------- */
+/* ---------- Weather Chart (min + max temperature vs day + hover tooltip) ---------- */
 
 type WeatherPoint = {
   label: string;
@@ -169,6 +183,8 @@ type WeatherChartProps = {
 };
 
 function WeatherChart({ points }: WeatherChartProps) {
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
   if (!points.length) {
     return <div className="mini-chart-empty">No data yet</div>;
   }
@@ -225,6 +241,21 @@ function WeatherChart({ points }: WeatherChartProps) {
     ticks.push(t);
   }
 
+  let tooltipX = 0;
+  let tooltipY = 0;
+  let tooltipText = "";
+
+  if (hoverIndex !== null) {
+    const maxC = maxCoords[hoverIndex];
+    const minC = minCoords[hoverIndex];
+    tooltipX = (maxC.x + minC.x) / 2;
+    tooltipY = Math.min(maxC.y, minC.y) - 10;
+    const day = points[hoverIndex];
+    tooltipText = `${day.label}: Max ${day.max.toFixed(
+      1
+    )}°C, Min ${day.min.toFixed(1)}°C`;
+  }
+
   return (
     <div className="weather-chart-container">
       <svg width={width} height={height} className="mini-chart">
@@ -279,6 +310,7 @@ function WeatherChart({ points }: WeatherChartProps) {
           stroke="none"
         />
 
+        {/* Max line + hoverable points */}
         <polyline
           fill="none"
           stroke="#ef4444"
@@ -290,11 +322,15 @@ function WeatherChart({ points }: WeatherChartProps) {
             key={`max-${i}`}
             cx={c.x}
             cy={c.y}
-            r={2}
+            r={hoverIndex === i ? 4 : 2}
             fill="#ef4444"
+            style={{ cursor: "pointer" }}
+            onMouseEnter={() => setHoverIndex(i)}
+            onMouseLeave={() => setHoverIndex(null)}
           />
         ))}
 
+        {/* Min line + hoverable points */}
         <polyline
           fill="none"
           stroke="#3b82f6"
@@ -306,8 +342,11 @@ function WeatherChart({ points }: WeatherChartProps) {
             key={`min-${i}`}
             cx={c.x}
             cy={c.y}
-            r={2}
+            r={hoverIndex === i ? 4 : 2}
             fill="#3b82f6"
+            style={{ cursor: "pointer" }}
+            onMouseEnter={() => setHoverIndex(i)}
+            onMouseLeave={() => setHoverIndex(null)}
           />
         ))}
 
@@ -338,6 +377,31 @@ function WeatherChart({ points }: WeatherChartProps) {
         >
           Temperature (°C)
         </text>
+
+        {/* Tooltip */}
+        {hoverIndex !== null && (
+          <g className="weather-tooltip">
+            <rect
+              x={tooltipX - 70}
+              y={tooltipY - 20}
+              width={140}
+              height={22}
+              rx={6}
+              ry={6}
+              fill="#111827"
+              opacity={0.9}
+            />
+            <text
+              x={tooltipX}
+              y={tooltipY - 6}
+              textAnchor="middle"
+              fontSize="10"
+              fill="#f9fafb"
+            >
+              {tooltipText}
+            </text>
+          </g>
+        )}
       </svg>
 
       <div className="weather-legend">
@@ -429,6 +493,7 @@ function AuthScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -438,6 +503,11 @@ function AuthScreen() {
 
     if (!email || !password) {
       setError("Please enter email and password.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
       return;
     }
 
@@ -453,7 +523,7 @@ function AuthScreen() {
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
       }
-      // onAuthStateChanged in App will pick this up
+      // onAuthStateChanged in App will handle redirect
     } catch (err: any) {
       console.error(err);
       setError(
@@ -480,6 +550,11 @@ function AuthScreen() {
       {/* Right login card */}
       <div className="auth-right">
         <div className="auth-card">
+          <div className="auth-logo-row">
+            <div className="auth-logo-circle">🌱</div>
+            <span className="auth-logo-text">Smart Irrigation</span>
+          </div>
+
           <div className="auth-tabs">
             <button
               className={"auth-tab" + (mode === "signin" ? " active" : "")}
@@ -513,25 +588,36 @@ function AuthScreen() {
 
             <label className="auth-label">
               Password
-              <input
-                type="password"
-                className="auth-input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-              />
+              <div className="auth-input-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="auth-input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  className="auth-eye"
+                  onClick={() => setShowPassword((v) => !v)}
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
             </label>
 
             {mode === "signup" && (
               <label className="auth-label">
                 Confirm Password
-                <input
-                  type="password"
-                  className="auth-input"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                />
+                <div className="auth-input-wrapper">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className="auth-input"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                </div>
               </label>
             )}
 
@@ -545,9 +631,13 @@ function AuthScreen() {
               {loading
                 ? "Please wait..."
                 : mode === "signin"
-                ? "Login"
+                ? "Enter Dashboard"
                 : "Sign Up"}
             </button>
+
+            <p className="auth-footer-hint">
+              This login is only for project demo users.
+            </p>
           </form>
         </div>
       </div>
@@ -574,6 +664,7 @@ export default function App() {
   const [auto, setAuto] = useState(true);
   const [manualPump, setManualPump] = useState(false);
   const [statusText, setStatusText] = useState("");
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   const [weatherPoints, setWeatherPoints] = useState<WeatherPoint[]>([]);
   const [soilHistory, setSoilHistory] = useState<LineChartPoint[]>([]);
@@ -626,6 +717,14 @@ export default function App() {
           return next.slice(-15);
         });
       }
+
+      setLastUpdated(
+        new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+      );
     });
 
     const controlRef = ref(db, "irrigation/control");
@@ -730,16 +829,28 @@ export default function App() {
 
       <main className="dashboard-wrapper">
         <div className="dash-header">
-          <h2 className="dash-title">Web Dashboard</h2>
-          <p className="dash-subtitle">
-            Live view of sensor data from IoT based Smart Irrigation
-            System.
-          </p>
+          <div>
+            <h2 className="dash-title">Web Dashboard Template</h2>
+            <p className="dash-subtitle">
+              Live view of sensor data from IoT based Smart Irrigation
+              System.
+            </p>
+          </div>
+          <div className="dash-header-right">
+            {lastUpdated && (
+              <span className="last-updated">
+                Last updated: {lastUpdated}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="layout-row">
           {/* LEFT SIDE */}
           <div className="left-column">
+            <h4 className="section-label">
+              Live Sensors &amp; Controls
+            </h4>
             <div className="card-row">
               <Gauge
                 label="Soil Moisture"
@@ -818,6 +929,7 @@ export default function App() {
 
           {/* RIGHT SIDE */}
           <div className="right-column">
+            <h4 className="section-label">Weather &amp; Analytics</h4>
             <div className="graphs-panel">
               <h3 className="graphs-title">
                 Weather Temperature (Next Days)
