@@ -676,7 +676,6 @@ export default function App() {
 
   const [auto, setAuto] = useState(true);
   const [manualPump, setManualPump] = useState(false);
-  const [statusText, setStatusText] = useState("");
 
   const [weatherPoints, setWeatherPoints] = useState<WeatherPoint[]>([]);
   const [soilHistory, setSoilHistory] = useState<LineChartPoint[]>([]);
@@ -738,27 +737,34 @@ export default function App() {
 
   }, []);
 
-  /* --- ESP32 Offline Detection (10 sec timeout, NO NTP) --- */
+  /* --- ESP32 Offline Detection (5 sec, STABLE) --- */
 useEffect(() => {
-  if (lastSeen === null) return;
+  const interval = setInterval(() => {
+    if (lastSeen === null) return;
 
-  const timeout = setTimeout(() => {
     const now = Date.now();
     const diff = now - lastSeen;
 
-    // ESP32 OFFLINE after 10 seconds
-    if (diff > 10000 && isOnline) {
-      setIsOnline(false);
+    // ESP32 OFFLINE after 5 seconds
+    if (diff > 5000) {
+      if (isOnline) {
+        setIsOnline(false);
 
-      setTemp(0);
-      setHum(0);
-      setSoil(0);
-      setPump("OFF");
-      setSoilHistory([]);
+        setTemp(0);
+        setHum(0);
+        setSoil(0);
+        setPump("OFF");
+        setSoilHistory([]);
+      }
+    } else {
+      // ESP32 back online
+      if (!isOnline) {
+        setIsOnline(true);
+      }
     }
-  }, 10000);
+  }, 3000); // check every 3 seconds
 
-  return () => clearTimeout(timeout);
+  return () => clearInterval(interval);
 }, [lastSeen, isOnline]);
 
   /* --- Soil Moisture History (FROM FIREBASE - persistent) --- */
@@ -822,11 +828,6 @@ useEffect(() => {
       auto: newAuto,
       manualPump: newManual,
     });
-    setStatusText(
-      `Auto = ${newAuto ? "ON" : "OFF"}, Manual Pump = ${
-        newManual ? "ON" : "OFF"
-      }`
-    );
   };
 
   const toggleAuto = () => {
