@@ -681,6 +681,10 @@ export default function App() {
   const [weatherPoints, setWeatherPoints] = useState<WeatherPoint[]>([]);
   const [soilHistory, setSoilHistory] = useState<LineChartPoint[]>([]);
 
+  const [lastSeen, setLastSeen] = useState<number | null>(null);
+
+  const [isOnline, setIsOnline] = useState(true);
+
   /* --- Auth listener --- */
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
@@ -713,22 +717,6 @@ export default function App() {
       setSoil(newSoil);
 
       if (typeof d.pumpStatus === "string") setPump(d.pumpStatus);
-
-      if (newSoil !== null) {
-        setSoilHistory((prev) => {
-          const next = [
-            ...prev,
-            {
-              label: new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
-              value: newSoil,
-            },
-          ];
-          return next.slice(-15);
-        });
-      }
     });
 
     const controlRef = ref(db, "irrigation/control");
@@ -737,7 +725,69 @@ export default function App() {
       setAuto(!!c.auto);
       setManualPump(!!c.manualPump);
     });
+
+    const statusRef = ref(db, "irrigation/status/lastSeen");
+    onValue(statusRef, (snap) => {
+    const v = snap.val();
+    if (typeof v === "number") {
+      setLastSeen(v);
+    } else {
+      setLastSeen(null);
+    }
+  });
+
   }, []);
+
+  /* --- ESP32 Offline Detection (10 sec timeout, NO NTP) --- */
+useEffect(() => {
+  if (lastSeen === null) return;
+
+  const timeout = setTimeout(() => {
+    const now = Date.now();
+    const diff = now - lastSeen;
+
+    // ESP32 OFFLINE after 10 seconds
+    if (diff > 10000 && isOnline) {
+      setIsOnline(false);
+
+      setTemp(0);
+      setHum(0);
+      setSoil(0);
+      setPump("OFF");
+      setSoilHistory([]);
+    }
+  }, 10000);
+
+  return () => clearTimeout(timeout);
+}, [lastSeen, isOnline]);
+
+  /* --- Soil Moisture History (FROM FIREBASE - persistent) --- */
+useEffect(() => {
+  const historyRef = ref(db, "irrigation/history/soil");
+
+  onValue(historyRef, (snap) => {
+    const data = snap.val();
+
+    if (!data) {
+      setSoilHistory([]);
+      return;
+    }
+
+    const points: LineChartPoint[] = Object.entries(data)
+      .map(([timestamp, value]) => ({
+        label: new Date(Number(timestamp)).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        value: Number(value),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label))
+      .slice(-15); // keep last 15 points only
+
+    setSoilHistory(points);
+  });
+}, []);
+
 
   /* --- Weather (once) --- */
   useEffect(() => {
@@ -918,7 +968,7 @@ export default function App() {
               </div>
 
               <p className="status-text">
-                {statusText || "Auto = OFF, Manual Pump = OFF"}
+                {isOnline ? "ESP32 ONLINE" : "ESP32 OFFLINE"}
               </p>
             </div>
           </div>
