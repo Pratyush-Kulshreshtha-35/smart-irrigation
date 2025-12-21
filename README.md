@@ -39,7 +39,6 @@ A complete **IoT-based Smart Irrigation System** that monitors soil conditions a
 
 - `login.png`
 - `dashboard.png`
-- `status.png`
 
 ---
 
