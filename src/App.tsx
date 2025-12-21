@@ -676,13 +676,17 @@ export default function App() {
 
   const [auto, setAuto] = useState(true);
   const [manualPump, setManualPump] = useState(false);
+  const [statusText, setStatusText] = useState("");
 
   const [weatherPoints, setWeatherPoints] = useState<WeatherPoint[]>([]);
   const [soilHistory, setSoilHistory] = useState<LineChartPoint[]>([]);
 
   const [lastSeen, setLastSeen] = useState<number | null>(null);
 
-  const [isOnline, setIsOnline] = useState(true);
+  const [heartbeat, setHeartbeat] = useState<number | null>(null);
+  const [lastHeartbeat, setLastHeartbeat] = useState<number | null>(null);
+  const [isOnline, setIsOnline] = useState(false);
+
 
   /* --- Auth listener --- */
   useEffect(() => {
@@ -726,46 +730,40 @@ export default function App() {
     });
 
     const statusRef = ref(db, "irrigation/status/lastSeen");
-    onValue(statusRef, (snap) => {
-    const v = snap.val();
-    if (typeof v === "number") {
-      setLastSeen(v);
-    } else {
-      setLastSeen(null);
-    }
-  });
+      onValue(statusRef, (snap) => {
+      const v = snap.val();
+      if (typeof v === "number") {
+        setLastSeen(v);
+      } else {
+        setLastSeen(null);
+      }
+    });
 
   }, []);
 
-  /* --- ESP32 Offline Detection (5 sec, STABLE) --- */
+/* --- ESP32 Online / Offline Detection (5 sec, SERVER TIME) --- */
 useEffect(() => {
-  const interval = setInterval(() => {
-    if (lastSeen === null) return;
+  if (lastSeen === null) {
+    setIsOnline(false);
+    return;
+  }
 
-    const now = Date.now();
-    const diff = now - lastSeen;
+  const timer = setInterval(() => {
+    const diff = Date.now() - lastSeen;
 
-    // ESP32 OFFLINE after 5 seconds
     if (diff > 5000) {
-      if (isOnline) {
-        setIsOnline(false);
-
-        setTemp(0);
-        setHum(0);
-        setSoil(0);
-        setPump("OFF");
-        setSoilHistory([]);
-      }
+      setIsOnline(false);
+      setTemp(null);
+      setHum(null);
+      setSoil(null);
+      setPump("OFF");
     } else {
-      // ESP32 back online
-      if (!isOnline) {
-        setIsOnline(true);
-      }
+      setIsOnline(true);
     }
-  }, 3000); // check every 3 seconds
+  }, 1000);
 
-  return () => clearInterval(interval);
-}, [lastSeen, isOnline]);
+  return () => clearInterval(timer);
+}, [lastSeen]);
 
   /* --- Soil Moisture History (FROM FIREBASE - persistent) --- */
 useEffect(() => {
@@ -828,6 +826,11 @@ useEffect(() => {
       auto: newAuto,
       manualPump: newManual,
     });
+    setStatusText(
+      `Auto = ${newAuto ? "ON" : "OFF"}, Manual Pump = ${
+        newManual ? "ON" : "OFF"
+      }`
+    );
   };
 
   const toggleAuto = () => {
