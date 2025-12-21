@@ -1,109 +1,156 @@
-# 🌱 Smart Irrigation – Web Dashboard
+# 🌱 Smart Irrigation – IoT Web Dashboard
 
-A modern web dashboard to monitor and control an **IoT-based Smart Irrigation System** in real time using ESP32, sensors, and Firebase.
+A complete **IoT-based Smart Irrigation System** that monitors soil conditions and controls irrigation using **ESP32, Firebase, and a React Web Dashboard**.
 
 ---
 
 ## 🔥 Features
 
-- Live sensor monitoring (Soil Moisture, Temperature, Humidity)
-- Automatic and Manual Water Pump control
-- 5-day weather forecast with Min/Max temperature graph
-- Live Soil Moisture history chart
-- Firebase Login (Sign-in & Sign-up authentication)
-- Dark / Light Theme Toggle
-- Fully responsive & smooth UI
+- Live monitoring of:
+  - Soil Moisture
+  - Soil Temperature
+  - Surrounding Humidity
+- Auto & Manual Water Pump Control
+- ESP32 Online / Offline detection (Heartbeat)
+- Soil Moisture History Graph
+- 5-Day Weather Forecast (Min / Max)
+- Firebase Authentication (Sign In / Sign Up)
+- Dark / Light Theme
+- Responsive UI
 
 ---
 
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
-|-------|-------------|
+|------|-----------|
 | Frontend | React + TypeScript + Vite |
-| Styling | Custom CSS |
 | Database | Firebase Realtime Database |
-| Authentication | Firebase Auth |
+| Auth | Firebase Authentication |
 | Hosting | Firebase Hosting |
-| IoT Hardware | ESP32 + DHT22 + Soil Moisture Sensor + Relay + Pump |
+| Weather API | OpenWeather |
+| IoT | ESP32, DHT22, Soil Moisture Sensor, Relay, Pump |
 
 ---
 
-## 📂 Project Setup
+## 📸 Screenshots
 
-### 1️⃣ Clone the Repository
-```bash
-git clone <your-repository-link>
-cd smart-irrigation
-```
-### 2️⃣ Install Dependencies
-```bash
-npm install
-```
-### 3️⃣ Create .env File (Required)
-Create a file named .env in the root of the project and add:
+> Place images in `screenshots/` folder
 
-```bash
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
-VITE_FIREBASE_DATABASE_URL=your_database_url
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
+- `login.png`
+- `dashboard.png`
+- `status.png`
 
-VITE_WEATHER_API_KEY=your_openweather_api_key
-```
-### 4️⃣ Start Development Locally
-```bash
-npm run dev
-```
-### 5️⃣ Build for Production
-```bash
-npm run build
-```
-### 6️⃣ Deploy to Firebase Hosting
-```bash
-firebase deploy
-```
-### 🔌 ESP32 → Firebase Data Format
-ESP32 should upload data to:
+---
 
-```bash
+## 🔌 ESP32 Firmware
+
+ESP32 code is available inside:
+
+/esp32/esp32_smart_irrigation.ino
+
+
+The ESP32:
+- Reads sensor data every 5 seconds
+- Controls pump based on Auto / Manual mode
+- Sends heartbeat to detect online/offline status
+
+---
+
+## 🔗 Firebase Database Structure
+
+### Sensor Data
+
+```json
 /irrigation/data/
-```
-Example structure:
-```bash
-json
 {
-  "soil": 63,
-  "temperature": 28.7,
-  "humidity": 54.3,
+  "soil": 62,
+  "temperature": 27.4,
+  "humidity": 58,
   "pumpStatus": "ON"
 }
 ```
-The dashboard reads control commands from:
+---
 
-```bash
+### Control Commands
+
+```json
 /irrigation/control/
-```
-Example:
-```bash
-json
 {
   "auto": true,
   "manualPump": false
 }
 ```
-### ⭐ Contribution
-Contributions are welcome!
-To improve UI, backend logic or add new features:
+
+---
+
+### ESP32 Heartbeat
+
+```json
+/irrigation/status/
+{
+  "lastSeen": 123456789
+}
 ```
-1. Fork the repository
-2. Create a new branch
-3. Commit your changes
-4. Push and open a pull request
+
+---
+
+## ⚡ Circuit Connections
+
+### 📋 Connection Table
+
+| Component                | ESP32 Pin          | Notes                        |
+| ------------------------ | ------------------ | ---------------------------- |
+| DHT22 Data               | GPIO 15            | Use 10kΩ pull-up resistor    |
+| DHT22 VCC                | 3.3V               | ⚠️ Do **NOT** use 5V         |
+| DHT22 GND                | GND                | Common ground                |
+| Soil Moisture Sensor AO  | GPIO 34            | Analog input only            |
+| Soil Moisture Sensor VCC | 3.3V               | Stable readings              |
+| Soil Moisture Sensor GND | GND                | Common ground                |
+| Relay IN                 | GPIO 26            | LOW-trigger relay            |
+| Relay VCC                | 5V                 | External 5V supply           |
+| Relay GND                | GND                | Must be common with ESP32    |
+| Pump +                   | External Battery + | Connected via Relay COM → NO |
+| Pump −                   | External Battery − | Direct connection            |
+
+---
+
+## ⚠️ Important:
+
+Do NOT power pump from ESP32
+
+Use separate battery for pump
+
+Common GND between ESP32 & relay module
+
+---
+
+## 🚀 Project Setup
+
 ```
-### 👨‍💻 Author
-# Pratyush Kulshreshtha
-IoT • Web Development • Firebase • React
+git clone https://github.com/Pratyush-Kulshreshtha-35/smart-irrigation.git
+cd smart-irrigation
+npm install
+npm run dev
+```
+
+---
+
+## ⭐ Contribution
+
+1. Fork repository
+2. Create feature branch
+3. Commit changes
+4. Open pull request
+
+---
+
+## 👨‍💻 Author
+
+### Pratyush Kulshreshtha
+
+### IoT • Web Development • Firebase • React
+
+### 🔗 GitHub: https://github.com/Pratyush-Kulshreshtha-35
+
+---
